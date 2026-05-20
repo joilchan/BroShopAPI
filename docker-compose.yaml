@@ -1,0 +1,14 @@
+services:
+  # Наше .NET 8 Web API
+  broshop-api:
+    image: broshop-api:latest
+    container_name: broshop_api_container
+    build:
+      context: .
+      dockerfile: BroShopAPI/Dockerfile
+    ports:
+      - "8080:8080" # Внешний порт 8080 ведет на 8080 внутри контейнера
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      
