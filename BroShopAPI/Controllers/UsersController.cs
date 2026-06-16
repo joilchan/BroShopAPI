@@ -78,8 +78,6 @@ public class UsersController : ControllerBase
             return Unauthorized(new { message = "Неверные данные для входа" });
         }
 
-        // НАДЕЖНАЯ ПРОВЕРКА: Смотрим на RoleId напрямую из таблицы Users. 
-        // У joil в базе стоит RoleId = 1, значит 1 — это админ.
         if (user.RoleId != 1 && user.RoleId != 4)
         {
             return StatusCode(403, new { message = "Доступ запрещен. Вы не являетесь администратором." });
@@ -152,7 +150,6 @@ public class UsersController : ControllerBase
 
         try
         {
-            // Удаляем пользователя
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
@@ -200,7 +197,6 @@ public class UsersController : ControllerBase
         }
 
         // Создаем новый объект пользователя
-        // Замените "User" на точное имя вашего класса сущности (например, UserEntity, если оно отличается)
         var newUser = new User
         {
             FullName = request.FullName,
@@ -318,8 +314,6 @@ public class UsersController : ControllerBase
             OrderHistory = orderHistory
         });
     }
-
-   // Добавьте эту DTO модель в нижнюю часть контроллера к остальным классам
     public class RegisterUserRequest
     {
         public string FullName { get; set; }
@@ -344,7 +338,6 @@ public class UsersController : ControllerBase
         public string NewPassword { get; set; }
     }
 
-    // Модель для принятия данных с фронтенда
     public class CreateUserRequest
     {
         public string FullName { get; set; }
@@ -356,7 +349,6 @@ public class UsersController : ControllerBase
 
     public class LoginRequest
     {
-        // Называем поле Identifier, так как там может быть и то, и другое
         public string Identifier { get; set; }
         public string Password { get; set; }
     }
