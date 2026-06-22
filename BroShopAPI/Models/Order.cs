@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace BroShopAPI.Models;
 
@@ -23,7 +24,9 @@ public partial class Order
 
     public string Status { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual ICollection<OrderProduct> OrderProducts { get; set; } = new List<OrderProduct>();
 
+    [JsonIgnore]
     public virtual User User { get; set; } = null!;
 }
