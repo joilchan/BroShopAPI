@@ -14,9 +14,7 @@ public partial class Review
 
     public decimal Rating { get; set; }
 
-    [JsonIgnore]
     public virtual Product Product { get; set; } = null!;
 
-    [JsonIgnore]
     public virtual User User { get; set; } = null!;
 }

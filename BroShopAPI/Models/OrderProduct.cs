@@ -14,9 +14,7 @@ public partial class OrderProduct
 
     public decimal? PriceAtPurchase { get; set; }
 
-    [JsonIgnore]
     public virtual Order Order { get; set; } = null!;
 
-    [JsonIgnore]
     public virtual ProductVariant ProductVariant { get; set; } = null!;
 }
