@@ -16,11 +16,13 @@ namespace BroShopAPI.Controllers
             _context = context;
         }
 
-        // GET: api/Products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
             return await _context.Products
+                .Include(p => p.Brand)
+                .Include(p => p.ProductType)
+                .Include(p => p.ProductVariants)
                 .Select(p => new ProductDto
                 {
                     ProductId = p.ProductId,
@@ -32,16 +34,24 @@ namespace BroShopAPI.Controllers
                     BrandId = p.BrandId,
                     BrandName = p.Brand != null ? p.Brand.Name : null,
                     ProductTypeId = p.ProductTypeId,
-                    ProductTypeName = p.ProductType != null ? p.ProductType.Name : null
+                    ProductTypeName = p.ProductType != null ? p.ProductType.Name : null,
+                    ProductVariants = p.ProductVariants.Select(v => new ProductVariantDto
+                    {
+                        ProductVariantId = v.ProductVariantId,
+                        Size = v.Size,
+                        StockQuantity = v.StockQuantity
+                    }).ToList()
                 })
                 .ToListAsync();
         }
 
-        // GET: api/Products/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
             var productDto = await _context.Products
+                .Include(p => p.Brand)
+                .Include(p => p.ProductType)
+                .Include(p => p.ProductVariants)
                 .Where(p => p.ProductId == id)
                 .Select(p => new ProductDto
                 {
@@ -54,23 +64,23 @@ namespace BroShopAPI.Controllers
                     BrandId = p.BrandId,
                     BrandName = p.Brand != null ? p.Brand.Name : null,
                     ProductTypeId = p.ProductTypeId,
-                    ProductTypeName = p.ProductType != null ? p.ProductType.Name : null
+                    ProductTypeName = p.ProductType != null ? p.ProductType.Name : null,
+                    ProductVariants = p.ProductVariants.Select(v => new ProductVariantDto
+                    {
+                        ProductVariantId = v.ProductVariantId,
+                        Size = v.Size,
+                        StockQuantity = v.StockQuantity
+                    }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
-            if (productDto == null)
-            {
-                return NotFound();
-            }
-
+            if (productDto == null) return NotFound();
             return productDto;
         }
 
-        // POST: api/Products
         [HttpPost]
         public async Task<ActionResult<ProductDto>> PostProduct(ProductDto dto)
         {
-            // Маппим DTO обратно в доменную модель сущности базы данных
             var product = new Product
             {
                 Name = dto.Name,
@@ -85,39 +95,27 @@ namespace BroShopAPI.Controllers
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            // Присваиваем сгенерированный базой ID обратно в DTO
-            dto.ProductId = product.ProductId;
-
-            // Если нужно вернуть актуальные имена Бренда/Типа после сохранения:
-            var info = await _context.Products
-                .Where(p => p.ProductId == product.ProductId)
-                .Select(p => new {
-                    BrandName = p.Brand != null ? p.Brand.Name : null,
-                    TypeName = p.ProductType != null ? p.ProductType.Name : null
-                })
-                .FirstOrDefaultAsync();
-
-            if (info != null)
+            // Добавляем варианты
+            foreach (var vDto in dto.ProductVariants)
             {
-                dto.BrandName = info.BrandName;
-                dto.ProductTypeName = info.TypeName;
+                _context.ProductVariants.Add(new ProductVariant { ProductId = product.ProductId, Size = vDto.Size, StockQuantity = vDto.StockQuantity });
             }
+            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProduct), new { id = dto.ProductId }, dto);
+            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, dto);
         }
 
-        // PUT: api/Products/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct(int id, ProductDto dto)
         {
             if (id != dto.ProductId) return BadRequest("ID mismatch");
 
             var existingProduct = await _context.Products
+                .Include(p => p.ProductVariants)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (existingProduct == null) return NotFound();
 
-            // Обновляем свойства существующего продукта из пришедшего DTO
             existingProduct.Name = dto.Name;
             existingProduct.Price = dto.Price;
             existingProduct.Description = dto.Description;
@@ -126,19 +124,17 @@ namespace BroShopAPI.Controllers
             existingProduct.BrandId = dto.BrandId;
             existingProduct.ProductTypeId = dto.ProductTypeId;
 
-            try
+            // Удаляем старые варианты и добавляем обновленные
+            _context.ProductVariants.RemoveRange(existingProduct.ProductVariants);
+            foreach (var vDto in dto.ProductVariants)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
+                _context.ProductVariants.Add(new ProductVariant { ProductId = id, Size = vDto.Size, StockQuantity = vDto.StockQuantity });
             }
 
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // DELETE: api/Products/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
@@ -149,10 +145,8 @@ namespace BroShopAPI.Controllers
 
             if (product == null) return NotFound();
 
-            // Удаляем связанные сущности во избежание конфликтов каскадного удаления
             _context.ProductVariants.RemoveRange(product.ProductVariants);
             _context.Reviews.RemoveRange(product.Reviews);
-
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
