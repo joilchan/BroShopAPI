@@ -12,7 +12,7 @@ public partial class Review
 
     public string Text { get; set; } = null!;
 
-    public double Rating { get; set; }
+    public decimal Rating { get; set; }
 
     public virtual Product Product { get; set; } = null!;
 

@@ -58,8 +58,7 @@ namespace BroShopAPI.Controllers
                             Size = v.Size,
                             StockQuantity = v.StockQuantity
                         })
-                        .ToList(),
-                    Reviews = new List<ReviewDto>()
+                        .ToList()
                 })
                 .ToListAsync();
 
@@ -116,9 +115,8 @@ namespace BroShopAPI.Controllers
                     {
                         ProductId = r.ProductId,
                         UserId = r.UserId,
-                        Text = r.Text ?? "",
-                        Rating = Convert.ToInt32(r.Rating),
-                        UserLogin = r.User != null ? r.User.Login : "Пользователь"
+                        Text = r.Text,
+                        Rating = r.Rating,
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
