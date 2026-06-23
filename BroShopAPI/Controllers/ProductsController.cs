@@ -187,6 +187,7 @@ namespace BroShopAPI.Controllers
             if (product == null)
                 return NotFound();
 
+            // 1. Обновляем продукт
             product.Name = dto.Name;
             product.Price = dto.Price;
             product.Description = dto.Description;
@@ -195,21 +196,51 @@ namespace BroShopAPI.Controllers
             product.BrandId = dto.BrandId;
             product.ProductTypeId = dto.ProductTypeId;
 
+            var existingVariants = product.ProductVariants.ToList();
+
+            var incomingSizes = dto.ProductVariants
+                .Where(v => !string.IsNullOrWhiteSpace(v.Size))
+                .Select(v => v.Size.Trim())
+                .ToList();
+
+            foreach (var existing in existingVariants)
+            {
+                if (!incomingSizes.Contains(existing.Size))
+                {
+                    var isUsed = await _context.OrderProducts
+                        .AnyAsync(o => o.ProductVariantId == existing.ProductVariantId);
+
+                    if (isUsed)
+                    {
+                        return Conflict(
+                            $"Нельзя удалить размер {existing.Size}, он используется в заказах"
+                        );
+                    }
+
+                    _context.ProductVariants.Remove(existing);
+                }
+            }
+
             foreach (var variantDto in dto.ProductVariants)
             {
-                var existingVariant = product.ProductVariants
-                    .FirstOrDefault(v => v.Size == variantDto.Size);
+                if (string.IsNullOrWhiteSpace(variantDto.Size))
+                    continue;
 
-                if (existingVariant != null)
+                var size = variantDto.Size.Trim();
+
+                var existing = product.ProductVariants
+                    .FirstOrDefault(v => v.Size == size);
+
+                if (existing != null)
                 {
-                    existingVariant.StockQuantity = variantDto.StockQuantity;
+                    existing.StockQuantity = variantDto.StockQuantity;
                 }
                 else
                 {
                     _context.ProductVariants.Add(new ProductVariant
                     {
                         ProductId = id,
-                        Size = variantDto.Size,
+                        Size = size,
                         StockQuantity = variantDto.StockQuantity
                     });
                 }
