@@ -72,6 +72,8 @@ namespace BroShopAPI.Controllers
                 .Include(p => p.Brand)
                 .Include(p => p.ProductType)
                 .Include(p => p.ProductVariants)
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.User)
                 .Where(p => p.ProductId == id)
                 .Select(p => new ProductDto
                 {
@@ -107,7 +109,15 @@ namespace BroShopAPI.Controllers
                             Size = v.Size,
                             StockQuantity = v.StockQuantity
                         })
-                        .ToList()
+                        .ToList(),
+
+                    Reviews = p.Reviews.Select(r => new ReviewDto
+                    {
+                        ProductId = r.ProductId,
+                        UserId = r.UserId,
+                        Text = r.Text,
+                        Rating = r.Rating,
+                    }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
