@@ -11,6 +11,7 @@ namespace BroShopAPI.Controllers
     {
         private readonly AppDbContext _context;
 
+
     public ProductsController(AppDbContext context)
         {
             _context = context;
@@ -32,6 +33,7 @@ namespace BroShopAPI.Controllers
                     ImageUrl = p.ImageUrl,
                     Discount = p.Discount,
 
+                    BrandId = p.BrandId,
                     Brand = p.Brand == null
                         ? null
                         : new BrandShortDto
@@ -40,6 +42,7 @@ namespace BroShopAPI.Controllers
                             Name = p.Brand.Name
                         },
 
+                    ProductTypeId = p.ProductTypeId,
                     ProductType = p.ProductType == null
                         ? null
                         : new ProductTypeShortDto
@@ -79,6 +82,7 @@ namespace BroShopAPI.Controllers
                     ImageUrl = p.ImageUrl,
                     Discount = p.Discount,
 
+                    BrandId = p.BrandId,
                     Brand = p.Brand == null
                         ? null
                         : new BrandShortDto
@@ -87,6 +91,7 @@ namespace BroShopAPI.Controllers
                             Name = p.Brand.Name
                         },
 
+                    ProductTypeId = p.ProductTypeId,
                     ProductType = p.ProductType == null
                         ? null
                         : new ProductTypeShortDto
@@ -113,7 +118,7 @@ namespace BroShopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ProductDto>> PostProduct(ProductDto dto)
+        public async Task<ActionResult> PostProduct(ProductCreateUpdateDto dto)
         {
             var product = new Product
             {
@@ -122,6 +127,8 @@ namespace BroShopAPI.Controllers
                 Description = dto.Description,
                 ImageUrl = dto.ImageUrl,
                 Discount = dto.Discount,
+                BrandId = dto.BrandId,
+                ProductTypeId = dto.ProductTypeId
             };
 
             _context.Products.Add(product);
@@ -150,7 +157,7 @@ namespace BroShopAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, ProductDto dto)
+        public async Task<IActionResult> PutProduct(int id, ProductCreateUpdateDto dto)
         {
             if (id != dto.ProductId)
                 return BadRequest("ID mismatch");
@@ -167,6 +174,8 @@ namespace BroShopAPI.Controllers
             product.Description = dto.Description;
             product.ImageUrl = dto.ImageUrl;
             product.Discount = dto.Discount;
+            product.BrandId = dto.BrandId;
+            product.ProductTypeId = dto.ProductTypeId;
 
             _context.ProductVariants.RemoveRange(product.ProductVariants);
 

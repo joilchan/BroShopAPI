@@ -8,6 +8,13 @@
         public string? Description { get; set; }
         public string? ImageUrl { get; set; }
         public int? Discount { get; set; }
+        public int? BrandId { get; set; }
+
+        public string? BrandName { get; set; }
+
+        public int? ProductTypeId { get; set; }
+
+        public string? ProductTypeName { get; set; }
 
         public BrandShortDto? Brand { get; set; }
         public ProductTypeShortDto? ProductType { get; set; }
