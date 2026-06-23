@@ -5,6 +5,7 @@
         public int ProductId { get; set; }
         public int UserId { get; set; }
         public string Text { get; set; } = null!;
-        public double Rating { get; set; }
+        public int Rating { get; set; }
+        public string? UserLogin { get; set; }
     }
 }

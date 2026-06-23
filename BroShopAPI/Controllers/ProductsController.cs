@@ -111,12 +111,14 @@ namespace BroShopAPI.Controllers
                         })
                         .ToList(),
 
+                   
                     Reviews = p.Reviews.Select(r => new ReviewDto
                     {
                         ProductId = r.ProductId,
                         UserId = r.UserId,
                         Text = r.Text,
-                        Rating = r.Rating,
+                        Rating = (int)r.Rating,
+                        UserLogin = r.User != null ? r.User.Login : "Пользователь"
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
