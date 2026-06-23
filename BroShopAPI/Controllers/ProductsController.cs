@@ -128,31 +128,49 @@ namespace BroShopAPI.Controllers
                 ImageUrl = dto.ImageUrl,
                 Discount = dto.Discount,
                 BrandId = dto.BrandId,
-                ProductTypeId = dto.ProductTypeId
+                ProductTypeId = dto.ProductTypeId,
+                ProductVariants = new List<ProductVariant>()
             };
+
+            // 🔥 ВАЖНО: защита от пустых/битых данных
+            if (dto.ProductVariants != null && dto.ProductVariants.Any())
+            {
+                foreach (var variant in dto.ProductVariants)
+                {
+                    if (string.IsNullOrWhiteSpace(variant.Size))
+                        continue; // пропускаем мусор
+
+                    product.ProductVariants.Add(new ProductVariant
+                    {
+                        Size = variant.Size.Trim(),
+                        StockQuantity = variant.StockQuantity < 0 ? 0 : variant.StockQuantity
+                    });
+                }
+            }
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            if (dto.ProductVariants != null)
-            {
-                foreach (var variant in dto.ProductVariants)
-                {
-                    _context.ProductVariants.Add(new ProductVariant
-                    {
-                        ProductId = product.ProductId,
-                        Size = variant.Size,
-                        StockQuantity = variant.StockQuantity
-                    });
-                }
-
-                await _context.SaveChangesAsync();
-            }
-
             return CreatedAtAction(
                 nameof(GetProduct),
                 new { id = product.ProductId },
-                dto
+                new ProductDto
+                {
+                    ProductId = product.ProductId,
+                    Name = product.Name,
+                    Price = product.Price,
+                    Description = product.Description,
+                    ImageUrl = product.ImageUrl,
+                    Discount = product.Discount,
+                    BrandId = product.BrandId,
+                    ProductTypeId = product.ProductTypeId,
+                    ProductVariants = product.ProductVariants.Select(v => new ProductVariantDto
+                    {
+                        ProductVariantId = v.ProductVariantId,
+                        Size = v.Size,
+                        StockQuantity = v.StockQuantity
+                    }).ToList()
+                }
             );
         }
 
@@ -177,17 +195,22 @@ namespace BroShopAPI.Controllers
             product.BrandId = dto.BrandId;
             product.ProductTypeId = dto.ProductTypeId;
 
-            _context.ProductVariants.RemoveRange(product.ProductVariants);
-
-            if (dto.ProductVariants != null)
+            foreach (var variantDto in dto.ProductVariants)
             {
-                foreach (var variant in dto.ProductVariants)
+                var existingVariant = product.ProductVariants
+                    .FirstOrDefault(v => v.Size == variantDto.Size);
+
+                if (existingVariant != null)
+                {
+                    existingVariant.StockQuantity = variantDto.StockQuantity;
+                }
+                else
                 {
                     _context.ProductVariants.Add(new ProductVariant
                     {
                         ProductId = id,
-                        Size = variant.Size,
-                        StockQuantity = variant.StockQuantity
+                        Size = variantDto.Size,
+                        StockQuantity = variantDto.StockQuantity
                     });
                 }
             }
