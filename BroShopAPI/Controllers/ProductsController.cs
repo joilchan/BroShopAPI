@@ -270,5 +270,28 @@ namespace BroShopAPI.Controllers
 
             return NoContent();
         }
+
+        [HttpDelete("variant/{id}")]
+        public async Task<IActionResult> DeleteVariant(int id)
+        {
+            var hasOrders = await _context.OrderProducts
+                .AnyAsync(op => op.ProductVariantId == id);
+
+            if (hasOrders)
+            {
+                return BadRequest("Этот размер уже есть в заказах и не может быть удалён");
+            }
+
+            var variant = await _context.ProductVariants
+                .FirstOrDefaultAsync(v => v.ProductVariantId == id);
+
+            if (variant == null)
+                return NotFound();
+
+            _context.ProductVariants.Remove(variant);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
