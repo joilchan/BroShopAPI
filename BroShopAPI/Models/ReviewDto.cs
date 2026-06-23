@@ -6,6 +6,5 @@
         public int UserId { get; set; }
         public string Text { get; set; } = null!;
         public decimal Rating { get; set; }
-        public DateTime CreatedAt { get; set; }
     }
 }

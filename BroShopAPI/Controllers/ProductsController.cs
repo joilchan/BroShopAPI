@@ -142,13 +142,12 @@ namespace BroShopAPI.Controllers
                 ProductVariants = new List<ProductVariant>()
             };
 
-            // 🔥 ВАЖНО: защита от пустых/битых данных
             if (dto.ProductVariants != null && dto.ProductVariants.Any())
             {
                 foreach (var variant in dto.ProductVariants)
                 {
                     if (string.IsNullOrWhiteSpace(variant.Size))
-                        continue; // пропускаем мусор
+                        continue;
 
                     product.ProductVariants.Add(new ProductVariant
                     {
